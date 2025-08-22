@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Series iRacing</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 95%;
+            margin: 20px auto;
+        }
+        th, td {
+            padding: 6px;
+            text-align: center;
+        }
+        th {
+            background-color: #ddd;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 15px;
+            font-size: 16px;
+        }
+        #series-selector {
+            width: 300px;
+            margin: 10px auto;
+            text-align: left;
+        }
+        #search-box {
+            width: 100%;
+            padding: 6px;
+            margin-bottom: 8px;
+        }
+        #column-selector {
+            width: 95%;
+            margin: 10px auto;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align:center;">Series iRacing</h1>
+
+    <div id="loading" class="loading" style="display:none;text-align:center">⏳ Cargando...</div>
+
+    <button onclick="loadTable()">Cargar Tabla</button>
+    <div id="column-selector"></div>
+    <div id="table-container" style="text-align:center;"></div>
+
+    <div id="series-selector">
+        <input type="text" id="search-box" placeholder="Buscar serie...">
+        <div id="series-list"></div>
+    </div>
+
+    <script>
+        let selectedSeries = JSON.parse(localStorage.getItem('selectedSeries')) || [];
+        let visibleColumns = JSON.parse(localStorage.getItem('visibleColumns')) || null;
+        let allDates = [];
+
+        function fetchSeriesList() {
+            document.getElementById("loading").style.display = "block";
+            fetch('/get_series_list')
+                .then(res => res.json())
+                .then(seriesNames => {
+                    const listContainer = document.getElementById('series-list');
+                    listContainer.innerHTML = '';
+
+                    seriesNames.forEach(serie => {
+                        const isChecked = selectedSeries.includes(serie.serie_name);
+                        const div = document.createElement('div');
+                        div.innerHTML = `
+                            <label>
+                                <input type="checkbox" value="${serie.serie_name}" ${isChecked ? 'checked' : ''} onchange="toggleSeries(this)">
+                                ${serie.serie_name} - Licencia ${serie.licence_group}
+                            </label>
+                        `;
+                        listContainer.appendChild(div);
+                    });
+
+                    document.getElementById('search-box').addEventListener('input', function () {
+                        const filter = this.value.toLowerCase();
+                        const labels = listContainer.querySelectorAll('label');
+                        labels.forEach(label => {
+                            label.parentElement.style.display =
+                                label.textContent.toLowerCase().includes(filter) ? '' : 'none';
+                        });
+                    });
+                })
+                .finally(() => {
+                    document.getElementById("loading").style.display = "none";
+                });
+        }
+
+        function toggleSeries(checkbox) {
+            const value = checkbox.value;
+            if (checkbox.checked) {
+                if (!selectedSeries.includes(value)) selectedSeries.push(value);
+            } else {
+                selectedSeries = selectedSeries.filter(s => s !== value);
+            }
+            localStorage.setItem('selectedSeries', JSON.stringify(selectedSeries));
+        }
+
+        // === NUEVO: ahora recibe headers y usa visibleColumns calculado en loadTable ===
+        function renderColumnSelector(headers) {
+            const container = document.getElementById('column-selector');
+            container.innerHTML = '<h3>Mostrar / Ocultar Columnas</h3>';
+
+            headers.forEach((header, index) => {
+                const checked = visibleColumns[index] ? 'checked' : '';
+                container.innerHTML += `
+                    <label style="margin-right:10px;">
+                        <input type="checkbox" data-col="${index}" ${checked} onchange="toggleColumn(this)">
+                        ${header}
+                    </label>
+                `;
+            });
+        }
+
+        function toggleColumn(checkbox) {
+            const colIndex = parseInt(checkbox.dataset.col);
+            visibleColumns[colIndex] = checkbox.checked;
+            localStorage.setItem('visibleColumns', JSON.stringify(visibleColumns));
+            loadTable();
+        }
+
+        // === NUEVO: oculta automáticamente columnas completamente vacías (fechas sin datos) ===
+        function loadTable() {
+            document.getElementById("loading").style.display = "block";
+            fetch('/get_series_table')
+                .then(response => response.json())
+                .then(data => {
+                    allDates = data.all_dates;
+
+                    // Filtrar por series seleccionadas
+                    let filteredSeries = data.series.filter(s => selectedSeries.includes(s.serie_name));
+
+                    // Encabezados
+                    let headers = ["Serie", "Licencia", "Race Week", "Car IDs", ...allDates];
+
+                    // Detectar qué columnas tienen datos (primeras 4 siempre visibles)
+                    let colHasData = Array(headers.length).fill(false);
+                    for (let i = 0; i < 4; i++) colHasData[i] = true;
+
+                    filteredSeries.forEach(serie => {
+                        allDates.forEach((date, dIdx) => {
+                            const sch = (serie.schedules || []).find(s => s.start_date_week === date);
+                            const track = sch?.track_id ?? '-';
+                            if (track && track !== '-') {
+                                colHasData[4 + dIdx] = true;
+                            }
+                        });
+                    });
+
+                    // Inicializar / ajustar visibleColumns
+                    const needReset = !visibleColumns || visibleColumns.length !== headers.length;
+                    if (needReset) {
+                        visibleColumns = colHasData.slice();
+                    } else {
+                        // Respetar preferencia guardada, pero nunca mostrar columnas sin datos
+                        visibleColumns = visibleColumns.map((v, i) => v && colHasData[i]);
+                    }
+                    localStorage.setItem('visibleColumns', JSON.stringify(visibleColumns));
+
+                    // Dibujar selector de columnas
+                    renderColumnSelector(headers);
+
+                    // Construir tabla
+                    let table = '<table><thead><tr>';
+                    headers.forEach((header, index) => {
+                        if (visibleColumns[index]) {
+                            table += `<th>${header}</th>`;
+                        }
+                    });
+                    table += '</tr></thead><tbody>';
+
+                    filteredSeries.forEach(serie => {
+                        let rowData = [
+                            serie.serie_name,
+                            serie.licence_group,
+                            serie.race_week,
+                            (serie.cars_ids || []).join(', ')
+                        ];
+
+                        allDates.forEach(date => {
+                            let track = '-';
+                            let color = 'transparent';
+                            let trackOwned = 'false';
+
+                            (serie.schedules || []).forEach(sch => {
+                                if (sch.start_date_week === date) {
+                                    track = sch.track_id ?? '-';
+                                    color = sch.track_id_color || 'transparent';
+                                    trackOwned = sch.track_owned || 'false';
+                                }
+                            });
+
+                            let style = `background-color:${color}`;
+                            style += trackOwned === 'true' ? ';border-style:solid' : ';border-style:dotted';
+                            rowData.push(`<span style="${style}">${track}</span>`);
+                        });
+
+                        table += '<tr>';
+                        rowData.forEach((cell, index) => {
+                            if (visibleColumns[index]) {
+                                table += `<td>${cell}</td>`;
+                            }
+                        });
+                        table += '</tr>';
+                    });
+
+                    table += '</tbody></table>';
+                    document.getElementById('table-container').innerHTML = table;
+                })
+                .finally(() => {
+                    document.getElementById("loading").style.display = "none";
+                });
+        }
+
+        // Inicio
+        fetchSeriesList();
+    </script>
+</body>
+</html>

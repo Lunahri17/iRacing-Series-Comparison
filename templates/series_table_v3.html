@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Series iRacing</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 95%;
+            margin: 20px auto;
+        }
+        th, td {
+            padding: 6px;
+            text-align: center;
+        }
+        th {
+            background-color: #ddd;
+        }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 15px;
+            font-size: 16px;
+        }
+        #series-selector {
+            width: 1000px;
+            margin: 10px auto;
+            text-align: left;
+            font-size: 20px;   /* ajustá el tamaño que quieras */
+            padding: 5px;
+        }
+        #search-box {
+            width: 100%;
+            padding: 6px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align:center;">Series iRacing (Versión no mantenida)</h1>
+
+    <div id="loading" class="loading" style="display:none;text-align:center">⏳ Cargando...</div>
+
+    <button onclick="loadTable()">Cargar Tabla</button>
+    <div id="table-container" style="text-align:center;"></div>
+
+    <div id="series-selector">
+        <input type="text" id="search-box" placeholder="Buscar serie...">
+        <div id="series-list"></div>
+    </div>
+
+    <script>
+        let selectedSeries = JSON.parse(localStorage.getItem('selectedSeries')) || [];
+
+        function fetchSeriesList() {
+            document.getElementById("loading").style.display = "block";
+
+            fetch('/get_series_list')
+                .then(res => res.json())
+                .then(seriesNames => {
+                    const listContainer = document.getElementById('series-list');
+                    listContainer.innerHTML = '';
+
+                    seriesNames.sort((a, b) => {
+                        // Primero por licencia
+                        const licenceCompare = a.licence_group.localeCompare(b.licence_group, 'en', { sensitivity: 'base' });
+                        if (licenceCompare !== 0) {
+                            return licenceCompare;
+                        }
+                        // Si la licencia es la misma, ordenar por serie_name
+                        return a.serie_name.localeCompare(b.serie_name, 'en', { sensitivity: 'base' });
+                    });
+
+
+                    seriesNames.forEach(serie => {
+                        const isChecked = selectedSeries.includes(serie.serie_name);
+                        const div = document.createElement('div');
+                        div.innerHTML = `
+                            <label>
+                                <input type="checkbox" value="${serie.serie_name}" ${isChecked ? 'checked' : ''} onchange="toggleSeries(this)">
+                                Licencia: ${serie.licence_group} - ${serie.serie_name} - Categoria: ${serie.category}
+                            </label>
+                        `;
+                        listContainer.appendChild(div);
+                    });
+
+                    // Filtro de búsqueda
+                    document.getElementById('search-box').addEventListener('input', function () {
+                        const filter = this.value.toLowerCase();
+                        const labels = listContainer.querySelectorAll('label');
+                        labels.forEach(label => {
+                            label.parentElement.style.display =
+                                label.textContent.toLowerCase().includes(filter) ? '' : 'none';
+                        });
+                    });
+                }).finally(() => {
+                    document.getElementById("loading").style.display = "none";
+                });
+        }
+
+        function toggleSeries(checkbox) {
+            const value = checkbox.value;
+            if (checkbox.checked) {
+                if (!selectedSeries.includes(value)) selectedSeries.push(value);
+            } else {
+                selectedSeries = selectedSeries.filter(s => s !== value);
+            }
+            localStorage.setItem('selectedSeries', JSON.stringify(selectedSeries));
+        }
+
+        function getThisMonday() {
+            const today = new Date();
+            const day = today.getDay(); // 0 = domingo, 1 = lunes, ...
+            const diff = today.getDate() - day + (day === 0 ? -6 : 1); // ajusta si hoy es domingo
+            return new Date(today.setDate(diff));
+        }
+
+        function formatDate(d) {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`; // mismo formato que `data.all_dates`
+        }
+
+        function loadTable() {
+            document.getElementById("loading").style.display = "block";
+            fetch('/get_series_table')
+                .then(response => response.json())
+                .then(data => {
+                    let filteredSeries = data.series.filter(s => selectedSeries.includes(s.serie_name));
+
+                    let table = '<table><thead><tr>';
+                    table += '<th>Serie</th><th>Licencia</th><th>Race Week</th><th>Category</th><th>Car IDs</th>';
+
+                    const monday = getThisMonday();
+                    const mondayStr = formatDate(monday);
+
+                    // Filtrar las fechas que sean >= lunes actual
+                    const futureDates = data.all_dates.filter(d => d >= mondayStr);
+
+                    futureDates.forEach(date => {
+                        table += `<th>${date}</th>`;
+                    });
+
+                    table += '</tr></thead><tbody>';
+
+                    filteredSeries.forEach(serie => {
+                        table += `<tr>
+                            <td style="border: 1px solid black">${serie.serie_name}</td>
+                            <td style="border: 1px solid black">${serie.licence_group}</td>
+                            <td style="border: 1px solid black">${serie.race_week}</td>
+                            <td style="border: 1px solid black">${serie.category}</td>
+                            <td style="border: 1px solid black">${serie.cars_ids.join(', ')}</td>`;
+
+                        futureDates.forEach(date => {
+                            let track = '-';
+                            let color = 'transparent';
+                            let trackOwned = 'false';
+                            serie.schedules.forEach(sch => {
+                                if (sch.start_date_week === date) {
+                                    track = sch.track_id;
+                                    color = sch.track_id_color || 'transparent';
+                                    trackOwned = sch.track_owned || 'false';
+                                }
+                            });
+                            table += `<td style="background-color:`;
+                            if (trackOwned === 'true') {
+                                table += `#69DF1C;border-style:solid`;
+                            } else {
+                                table += `${color};border-style:dotted`;
+                            }
+                            table += `">${track}</td>`;
+                        });
+
+                        table += '</tr>';
+                    });
+
+                    table += '</tbody></table>';
+                    document.getElementById('table-container').innerHTML = table;
+                })
+                .finally(() => {
+                    document.getElementById("loading").style.display = "none";
+                });
+        }
+
+        // Cargar lista de series al inicio
+        fetchSeriesList();
+    </script>
+</body>
+</html>
