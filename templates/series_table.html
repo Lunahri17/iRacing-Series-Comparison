@@ -102,8 +102,6 @@
                         return a.serie_name.localeCompare(b.serie_name, 'en', { sensitivity: 'base' });
                     });
 
-
-
                     seriesNames.forEach(serie => {
                         const isChecked = selectedSeries.includes(serie.serie_name);
                         const div = document.createElement('div');
@@ -216,15 +214,6 @@
                 .then(response => response.json())
                 .then(data => {
                     let filteredSeries = data.series.filter(s => selectedSeries.includes(s.serie_name));
-
-                    // Ordenar por licencia, categoría y luego serie
-                    filteredSeries.sort((a, b) => {
-                        const licenceCompare = a.licence_group.localeCompare(b.licence_group, 'en', { sensitivity: 'base' });
-                        if (licenceCompare !== 0) return licenceCompare;
-                        const categoryCompare = a.category.localeCompare(b.category, 'en', { sensitivity: 'base' });
-                        if (categoryCompare !== 0) return categoryCompare;
-                        return a.serie_name.localeCompare(b.serie_name, 'en', { sensitivity: 'base' });
-                    });
 
                     let table = '<table><thead><tr>';
                     table += '<th>Serie</th><th>Licencia</th><th>Race Week</th><th>Category</th><th>Cars</th>';

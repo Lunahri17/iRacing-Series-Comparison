@@ -102,8 +102,6 @@
                         return a.serie_name.localeCompare(b.serie_name, 'en', { sensitivity: 'base' });
                     });
 
-
-
                     seriesNames.forEach(serie => {
                         const isChecked = selectedSeries.includes(serie.serie_name);
                         const div = document.createElement('div');
@@ -141,6 +139,46 @@
             localStorage.setItem('selectedSeries', JSON.stringify(selectedSeries));
         }
 
+        function sortTable(table, col) {
+            const tbody = table.tBodies[0];
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+
+            const asc = !(table.dataset.sortAsc === "true" && table.dataset.sortCol == col);
+            table.dataset.sortAsc = asc;
+            table.dataset.sortCol = col;
+
+            rows.sort((a, b) => {
+                let A = a.children[col].innerText.trim();
+                let B = b.children[col].innerText.trim();
+
+                // detectar si ambos son números
+                const numA = parseFloat(A.replace(",", "."));  
+                const numB = parseFloat(B.replace(",", "."));
+                const isNumeric = !isNaN(numA) && !isNaN(numB);
+
+                if (isNumeric) {
+                    return asc ? numA - numB : numB - numA;
+                } else {
+                    return asc 
+                        ? A.localeCompare(B, undefined, { sensitivity: 'base', numeric: true })
+                        : B.localeCompare(A, undefined, { sensitivity: 'base', numeric: true });
+                }
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Delegar eventos después de renderizar la tabla
+        function makeTableSortable() {
+            const table = document.querySelector("#table-container table");
+            if (!table) return;
+
+            table.querySelectorAll("th").forEach((th, i) => {
+                th.style.cursor = "pointer";
+                th.addEventListener("click", () => sortTable(table, i));
+            });
+        }
+
         function loadTable() {
             const username = document.getElementById("username").value.trim();
             const password = document.getElementById("password").value.trim();
@@ -164,22 +202,42 @@
                     let filteredSeries = data.series.filter(s => selectedSeries.includes(s.serie_name));
 
                     let table = '<table><thead><tr>';
-                    table += '<th>Serie</th><th>Licencia</th><th>Race Week</th><th>Category</th><th>Car IDs</th>';
+                    table += '<th>Serie</th><th>Licencia</th><th>Race Week</th><th>Category</th><th>Cars</th>';
 
-                    data.all_dates.forEach(date => {
+                    const futureDates = data.all_dates;
+
+                    futureDates.forEach(date => {
                         table += `<th>${date}</th>`;
                     });
-
 
                     table += '</tr></thead><tbody>';
 
                     filteredSeries.forEach(serie => {
+                        // Agrupar autos por clase y resaltar los owned
+                        let carsByClass = {};
+                        serie.cars_ids.forEach(car => {
+                            if (!carsByClass[car.car_class]) carsByClass[car.car_class] = [];
+                            carsByClass[car.car_class].push(car);
+                        });
+
+                        let carsHTML = '';
+                        for (const [carClass, cars] of Object.entries(carsByClass)) {
+                            carsHTML += `<div style="margin-bottom:4px;"><strong>${carClass}</strong>: `;
+                            cars.forEach((car, idx) => {
+                                const style = car.car_owned === "true"
+                                    ? 'font-weight:bold; background:#00ff2f; padding:2px 4px; border-radius:4px;'
+                                    : '';
+                                carsHTML += `<span style="${style}">${car.car_name}</span>${idx < cars.length - 1 ? ', ' : ''}`;
+                            });
+                            carsHTML += '</div>';
+                        }
+
                         table += `<tr>
                             <td style="border: 1px solid black">${serie.serie_name}</td>
                             <td style="border: 1px solid black">${serie.licence_group}</td>
                             <td style="border: 1px solid black">${serie.race_week}</td>
                             <td style="border: 1px solid black">${serie.category}</td>
-                            <td style="border: 1px solid black">${serie.cars_ids.join(', ')}</td>`;
+                            <td style="border: 1px solid black; text-align:left;">${carsHTML}</td>`;
 
                         futureDates.forEach(date => {
                             let track = '-';
@@ -192,13 +250,12 @@
                                     trackOwned = sch.track_owned || 'false';
                                 }
                             });
-                            table += `<td style="background-color:`;
+                            table += `<td style="background-color:${color};`;
                             if (trackOwned === 'true') {
-                                table += `#69DF1C;border-style:solid`;
+                                table += `border-style:solid"> <span style="background-color:#00ff2f;">${track}</span> </td>`;
                             } else {
-                                table += `${color};border-style:dotted`;
+                                table += `border-style:dotted">${track}</td>`;
                             }
-                            table += `">${track}</td>`;
                         });
 
                         table += '</tr>';
@@ -206,11 +263,13 @@
 
                     table += '</tbody></table>';
                     document.getElementById('table-container').innerHTML = table;
+                    makeTableSortable();
                 })
                 .finally(() => {
                     document.getElementById("loading").style.display = "none";
                 });
         }
+
     </script>
 </body>
 </html>
