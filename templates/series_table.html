@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Series iRacing</title>
     <style>
         table {
@@ -9,58 +10,80 @@
             width: 95%;
             margin: 20px auto;
         }
-        th, td {
+
+        th,
+        td {
             padding: 6px;
             text-align: center;
         }
+
         th {
             background-color: #ddd;
         }
+
         button {
             display: block;
             margin: 20px auto;
             padding: 10px 15px;
             font-size: 16px;
         }
+
         #series-selector {
             width: 1000px;
             margin: 10px auto;
             text-align: left;
-            font-size: 20px;   /* ajustá el tamaño que quieras */
+            font-size: 20px;
             padding: 5px;
         }
+
         #search-box {
             width: 100%;
             padding: 6px;
             margin-bottom: 8px;
         }
+
+        /* Estilo para resaltar circuitos seleccionados */
+        .track-cell.selected {
+            outline: 3px solid red;
+            font-weight: bold;
+        }
     </style>
 </head>
+
 <body>
-    <h1 style="text-align:center;">Series iRacing</h1>
-    
-    <div id="login-container" style="margin-bottom: 20px;text-align:center;">
-        <label for="username">Usuario iRacing:</label><br>
-        <input type="text" id="username" name="username" placeholder="Tu usuario" style="padding: 5px; margin-bottom: 10px; width: 250px;"><br>
+    <h1 style="text-align: center">Series iRacing</h1>
 
-        <label for="password">Contraseña:</label><br>
-        <input type="password" id="password" name="password" placeholder="Tu contraseña" style="padding: 5px; margin-bottom: 10px; width: 250px;"><br>
+    <div id="login-container" style="margin-bottom: 20px; text-align: center">
+        <label for="username">Usuario iRacing:</label><br />
+        <input type="text" id="username" name="username" placeholder="Tu usuario"
+            style="padding: 5px; margin-bottom: 10px; width: 250px" /><br />
 
-        <button id="loadSeriesButton" onclick="fetchSeriesList()" style="padding: 8px 15px; font-size: 14px;">Cargar Series</button>
+        <label for="password">Contraseña:</label><br />
+        <input type="password" id="password" name="password" placeholder="Tu contraseña"
+            style="padding: 5px; margin-bottom: 10px; width: 250px" /><br />
+
+        <button id="loadSeriesButton" onclick="fetchSeriesList()" style="padding: 8px 15px; font-size: 14px">
+            Cargar Series
+        </button>
     </div>
 
-    <div id="loading" class="loading" style="display:none;text-align:center">⏳ Cargando...</div>
+    <div id="loading" class="loading" style="display: none; text-align: center">
+        ⏳ Cargando...
+    </div>
 
-    <button id="loadTableButton" onclick="loadTable()" style="display:none;text-align:center">Cargar Tabla</button>
-    <div id="table-container" style="text-align:center;"></div>
+    <button id="loadTableButton" onclick="loadTable()" style="display: none; text-align: center">
+        Cargar Tabla
+    </button>
+    <div id="table-container" style="text-align: center"></div>
 
-    <div id="series-selector" style="text-align:left">
-        <input type="text" id="search-box" placeholder="Buscar serie...">
+    <div id="series-selector" style="text-align: left">
+        <input type="text" id="search-box" placeholder="Buscar serie..." />
         <div id="series-list"></div>
     </div>
 
     <script>
-        let selectedSeries = JSON.parse(localStorage.getItem('selectedSeries')) || [];
+        let selectedSeries =
+            JSON.parse(localStorage.getItem("selectedSeries")) || [];
 
         function fetchSeriesList() {
             const username = document.getElementById("username").value.trim();
@@ -73,57 +96,66 @@
 
             document.getElementById("loading").style.display = "block";
 
-            fetch('/get_series_list', {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ username, password })
-                })
-                .then(res => res.json())
-                .then(seriesNames => {
-                    const listContainer = document.getElementById('series-list');
-                    listContainer.innerHTML = '';
+            fetch("/get_series_list", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username, password }),
+            })
+                .then((res) => res.json())
+                .then((seriesNames) => {
+                    const listContainer = document.getElementById("series-list");
+                    listContainer.innerHTML = "";
 
                     seriesNames.sort((a, b) => {
-                        // 1️⃣ Ordenar por licencia
-                        const licenceCompare = a.licence_group.localeCompare(b.licence_group, 'en', { sensitivity: 'base' });
-                        if (licenceCompare !== 0) {
-                            return licenceCompare;
-                        }
-
-                        // 2️⃣ Si la licencia es igual, ordenar por categoría
-                        const categoryCompare = a.category.localeCompare(b.category, 'en', { sensitivity: 'base' });
-                        if (categoryCompare !== 0) {
-                            return categoryCompare;
-                        }
-
-                        // 3️⃣ Si también la categoría es igual, ordenar por nombre de serie
-                        return a.serie_name.localeCompare(b.serie_name, 'en', { sensitivity: 'base' });
+                        const licenceCompare = a.licence_group.localeCompare(
+                            b.licence_group,
+                            "en",
+                            { sensitivity: "base" }
+                        );
+                        if (licenceCompare !== 0) return licenceCompare;
+                        const categoryCompare = a.category.localeCompare(
+                            b.category,
+                            "en",
+                            { sensitivity: "base" }
+                        );
+                        if (categoryCompare !== 0) return categoryCompare;
+                        return a.serie_name.localeCompare(b.serie_name, "en", {
+                            sensitivity: "base",
+                        });
                     });
 
-                    seriesNames.forEach(serie => {
+                    seriesNames.forEach((serie) => {
                         const isChecked = selectedSeries.includes(serie.serie_name);
-                        const div = document.createElement('div');
+                        const div = document.createElement("div");
                         div.innerHTML = `
                             <label>
-                                <input type="checkbox" value="${serie.serie_name}" ${isChecked ? 'checked' : ''} onchange="toggleSeries(this)">
-                                Licencia: ${serie.licence_group} - Categoria: ${serie.category} - ${serie.serie_name}
+                                <input type="checkbox" value="${serie.serie_name
+                            }" ${isChecked ? "checked" : ""
+                            } onchange="toggleSeries(this)">
+                                Licencia: ${serie.licence_group} - Categoria: ${serie.category
+                            } - ${serie.serie_name}
                             </label>
                         `;
                         listContainer.appendChild(div);
                     });
 
-                    // Filtro de búsqueda
-                    document.getElementById('search-box').addEventListener('input', function () {
-                        const filter = this.value.toLowerCase();
-                        const labels = listContainer.querySelectorAll('label');
-                        labels.forEach(label => {
-                            label.parentElement.style.display =
-                                label.textContent.toLowerCase().includes(filter) ? '' : 'none';
+                    document
+                        .getElementById("search-box")
+                        .addEventListener("input", function () {
+                            const filter = this.value.toLowerCase();
+                            const labels = listContainer.querySelectorAll("label");
+                            labels.forEach((label) => {
+                                label.parentElement.style.display = label.textContent
+                                    .toLowerCase()
+                                    .includes(filter)
+                                    ? ""
+                                    : "none";
+                            });
                         });
-                    });
-                }).finally(() => {
+                })
+                .finally(() => {
                     document.getElementById("loading").style.display = "none";
                     document.getElementById("loadTableButton").style.display = "block";
                 });
@@ -134,63 +166,122 @@
             if (checkbox.checked) {
                 if (!selectedSeries.includes(value)) selectedSeries.push(value);
             } else {
-                selectedSeries = selectedSeries.filter(s => s !== value);
+                selectedSeries = selectedSeries.filter((s) => s !== value);
             }
-            localStorage.setItem('selectedSeries', JSON.stringify(selectedSeries));
+            localStorage.setItem("selectedSeries", JSON.stringify(selectedSeries));
         }
 
         function sortTable(table, col) {
             const tbody = table.tBodies[0];
             const rows = Array.from(tbody.querySelectorAll("tr"));
 
-            const asc = !(table.dataset.sortAsc === "true" && table.dataset.sortCol == col);
+            const asc = !(
+                table.dataset.sortAsc === "true" && table.dataset.sortCol == col
+            );
             table.dataset.sortAsc = asc;
             table.dataset.sortCol = col;
 
             rows.sort((a, b) => {
                 let A = a.children[col].innerText.trim();
                 let B = b.children[col].innerText.trim();
-
-                // detectar si ambos son números
-                const numA = parseFloat(A.replace(",", "."));  
+                const numA = parseFloat(A.replace(",", "."));
                 const numB = parseFloat(B.replace(",", "."));
                 const isNumeric = !isNaN(numA) && !isNaN(numB);
 
                 if (isNumeric) {
                     return asc ? numA - numB : numB - numA;
                 } else {
-                    return asc 
-                        ? A.localeCompare(B, undefined, { sensitivity: 'base', numeric: true })
-                        : B.localeCompare(A, undefined, { sensitivity: 'base', numeric: true });
+                    return asc
+                        ? A.localeCompare(B, undefined, {
+                            sensitivity: "base",
+                            numeric: true,
+                        })
+                        : B.localeCompare(A, undefined, {
+                            sensitivity: "base",
+                            numeric: true,
+                        });
                 }
             });
 
-            rows.forEach(row => tbody.appendChild(row));
+            rows.forEach((row) => tbody.appendChild(row));
         }
 
-        // Delegar eventos después de renderizar la tabla
         function makeTableSortable() {
             const table = document.querySelector("#table-container table");
             if (!table) return;
-
             table.querySelectorAll("th").forEach((th, i) => {
                 th.style.cursor = "pointer";
                 th.addEventListener("click", () => sortTable(table, i));
             });
         }
 
+        function enableTrackSelection() {
+            document.querySelectorAll(".track-cell").forEach((cell) => {
+                cell.addEventListener("click", () => {
+                    const trackId = cell.dataset.trackId;
+
+                    document
+                        .querySelectorAll(".track-cell")
+                        .forEach((c) => c.classList.remove("selected"));
+
+                    document
+                        .querySelectorAll(`.track-cell[data-track-id="${trackId}"]`)
+                        .forEach((c) => {
+                            c.classList.add("selected");
+                        });
+                });
+            });
+        }
+
+        let selectedTracks = new Set(); // <-- circuitos seleccionados
+
+        // 🔹 marcar/desmarcar visualmente
+        function updateTrackHighlights() {
+            document.querySelectorAll(".track-cell").forEach((cell) => {
+                const trackId = cell.dataset.trackId;
+
+                if (selectedTracks.has(trackId)) {
+                    cell.style.outline = "3px solid red"; // resaltado claro
+                    cell.style.cursor = "pointer";
+                } else {
+                    cell.style.outline = ""; // reset
+                    cell.style.cursor = "pointer";
+                }
+            });
+        }
+
+        // 🔹 manejador de clicks
+        function handleTrackClick(e) {
+            const trackId = e.target.dataset.trackId;
+
+            if (selectedTracks.has(trackId)) {
+                selectedTracks.delete(trackId); // deselecciona
+            } else {
+                selectedTracks.add(trackId); // selecciona
+            }
+
+            updateTrackHighlights(); // refrescar
+        }
+
+        // 🔹 activar eventos después de renderizar la tabla
+        function enableTrackSelection() {
+            document.querySelectorAll(".track-cell").forEach((cell) => {
+                cell.addEventListener("click", handleTrackClick);
+            });
+        }
+
         function getThisMonday() {
             const today = new Date();
-            const day = today.getDay(); // 0 = domingo, 1 = lunes, ...
-            const diff = today.getDate() - day + (day === 0 ? -6 : 1); // ajusta si hoy es domingo
+            const day = today.getDay();
+            const diff = today.getDate() - day + (day === 0 ? -6 : 1);
             return new Date(today.setDate(diff));
         }
 
         function formatDate(d) {
             const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, '0');
-            const dd = String(d.getDate()).padStart(2, '0');
-            return `${yyyy}-${mm}-${dd}`; // mismo formato que `data.all_dates`
+            const mm = String(d.getMonth() + 1).padStart(2, "0");
+            const dd = String(d.getDate()).padStart(2, "0");
+            return `${yyyy}-${mm}-${dd}`;
         }
 
         function loadTable() {
@@ -204,50 +295,68 @@
 
             document.getElementById("loading").style.display = "block";
 
-            fetch('/get_series_table', {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ username, password })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    let filteredSeries = data.series.filter(s => selectedSeries.includes(s.serie_name));
+            fetch("/get_series_table", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    let filteredSeries = data.series.filter((s) =>
+                        selectedSeries.includes(s.serie_name)
+                    );
 
-                    let table = '<table><thead><tr>';
-                    table += '<th>Serie</th><th>Licencia</th><th>Race Week</th><th>Category</th><th>Cars</th>';
+                    filteredSeries.sort((a, b) => {
+                        const licenceCompare = a.licence_group.localeCompare(
+                            b.licence_group,
+                            "en",
+                            { sensitivity: "base" }
+                        );
+                        if (licenceCompare !== 0) return licenceCompare;
+                        const categoryCompare = a.category.localeCompare(
+                            b.category,
+                            "en",
+                            { sensitivity: "base" }
+                        );
+                        if (categoryCompare !== 0) return categoryCompare;
+                        return a.serie_name.localeCompare(b.serie_name, "en", {
+                            sensitivity: "base",
+                        });
+                    });
 
-                    const monday = getThisMonday();
-                    const mondayStr = formatDate(monday);
+                    let table = "<table><thead><tr>";
+                    table +=
+                        "<th>Serie</th><th>Licencia</th><th>Race Week</th><th>Category</th><th>Cars</th>";
 
-                    // Filtrar fechas futuras desde el lunes actual
-                    const futureDates = data.all_dates.filter(d => d >= mondayStr);
+                    const mondayStr = formatDate(getThisMonday());
+                    const futureDates = data.all_dates.filter((d) => d >= mondayStr);
 
-                    futureDates.forEach(date => {
+                    futureDates.forEach((date) => {
                         table += `<th>${date}</th>`;
                     });
 
-                    table += '</tr></thead><tbody>';
+                    table += "</tr></thead><tbody>";
 
-                    filteredSeries.forEach(serie => {
-                        // Agrupar autos por clase y resaltar los owned
+                    filteredSeries.forEach((serie) => {
                         let carsByClass = {};
-                        serie.cars_ids.forEach(car => {
-                            if (!carsByClass[car.car_class]) carsByClass[car.car_class] = [];
+                        serie.cars_ids.forEach((car) => {
+                            if (!carsByClass[car.car_class])
+                                carsByClass[car.car_class] = [];
                             carsByClass[car.car_class].push(car);
                         });
 
-                        let carsHTML = '';
+                        let carsHTML = "";
                         for (const [carClass, cars] of Object.entries(carsByClass)) {
                             carsHTML += `<div style="margin-bottom:4px;"><strong>${carClass}</strong>: `;
                             cars.forEach((car, idx) => {
-                                const style = car.car_owned === "true"
-                                    ? 'font-weight:bold; background:#00ff2f; padding:2px 4px; border-radius:4px;'
-                                    : '';
-                                carsHTML += `<span style="${style}">${car.car_name}</span>${idx < cars.length - 1 ? ', ' : ''}`;
+                                const style =
+                                    car.car_owned === "true"
+                                        ? "font-weight:bold; background:#00ff2f; padding:2px 4px; border-radius:4px;"
+                                        : "";
+                                carsHTML += `<span style="${style}">${car.car_name}</span>${idx < cars.length - 1 ? ", " : ""
+                                    }`;
                             });
-                            carsHTML += '</div>';
+                            carsHTML += "</div>";
                         }
 
                         table += `<tr>
@@ -257,37 +366,46 @@
                             <td style="border: 1px solid black">${serie.category}</td>
                             <td style="border: 1px solid black; text-align:left;">${carsHTML}</td>`;
 
-                        futureDates.forEach(date => {
-                            let track = '-';
-                            let color = 'transparent';
-                            let trackOwned = 'false';
-                            serie.schedules.forEach(sch => {
+                        futureDates.forEach((date) => {
+                            let track = "-";
+                            let color = "transparent";
+                            let trackOwned = "false";
+                            serie.schedules.forEach((sch) => {
                                 if (sch.start_date_week === date) {
                                     track = sch.track_id;
-                                    color = sch.track_id_color || 'transparent';
-                                    trackOwned = sch.track_owned || 'false';
+                                    color = sch.track_id_color || "transparent";
+                                    trackOwned = sch.track_owned || "false";
                                 }
                             });
-                            table += `<td style="background-color:${color};`;
-                            if (trackOwned === 'true') {
-                                table += `border-style:solid"> <span style="background-color:#00ff2f;">${track}</span> </td>`;
+                            table += `<td class="track-cell" data-track-id="${track}" 
+                    style="background-color:${color}; ${trackOwned === "true"
+                                    ? "border-style:solid"
+                                    : "border-style:dotted"
+                                }">`;
+
+                            if (trackOwned === "true") {
+                                table += `<span style="background-color:#00ff2f; padding:2px 4px; border-radius:4px;">${track}</span>`;
                             } else {
-                                table += `border-style:dotted">${track}</td>`;
+                                table += `${track}`;
                             }
+
+                            table += `</td>`;
                         });
 
-                        table += '</tr>';
+                        table += "</tr>";
                     });
 
-                    table += '</tbody></table>';
-                    document.getElementById('table-container').innerHTML = table;
+                    table += "</tbody></table>";
+                    document.getElementById("table-container").innerHTML = table;
                     makeTableSortable();
+                    enableTrackSelection();
+                    updateTrackHighlights();
                 })
                 .finally(() => {
                     document.getElementById("loading").style.display = "none";
                 });
         }
-
     </script>
 </body>
+
 </html>
