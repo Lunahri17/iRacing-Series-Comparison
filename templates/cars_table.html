@@ -2,134 +2,144 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <title>Cars iRacing</title>
-  <style>
-    table {
-      border-collapse: collapse;
-      width: 95%;
-      margin: 20px auto;
-    }
+    <meta charset="UTF-8" />
+    <title>Cars iRacing</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 95%;
+            margin: 20px auto;
+        }
 
-    th,
-    td {
-      padding: 6px;
-      text-align: center;
-      border: 1px solid #aaa;
-    }
+        th,
+        td {
+            padding: 6px;
+            text-align: center;
+            border: 1px solid #aaa;
+        }
 
-    th {
-      background-color: #ddd;
-    }
+        th {
+            background-color: #ddd;
+        }
 
-    button {
-      display: block;
-      margin: 20px auto;
-      padding: 10px 15px;
-      font-size: 16px;
-    }
+        button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 15px;
+            font-size: 16px;
+        }
 
-    #search-box {
-      width: 50%;
-      padding: 6px;
-      margin: 10px auto;
-      display: block;
-    }
+        #search-box {
+            width: 50%;
+            padding: 6px;
+            margin: 10px auto;
+            display: block;
+        }
 
-    img.car-thumb {
-      max-width: 400px;
-      border-radius: 12px;
-    }
+        img.car-thumb {
+            max-width: 400px;
+            border-radius: 12px;
+        }
 
-    a.car-link {
-      color: blue;
-      text-decoration: underline;
-    }
-  </style>
+        a.car-link {
+            color: blue;
+            text-decoration: underline;
+        }
+    </style>
 </head>
 
 <body>
-  <h1 style="text-align: center">Cars iRacing</h1>
+    {% include "header.html" %}
+    <h1 style="text-align: center">Cars iRacing</h1>
 
-  <div id="login-container" style="margin-bottom: 20px; text-align: center">
-    <label for="username">Usuario iRacing:</label><br />
-    <input type="text" id="username" name="username" placeholder="Tu usuario"
-      style="padding: 5px; margin-bottom: 10px; width: 250px" /><br />
+    <div id="login-container" style="margin-bottom: 20px; text-align: center">
+        <label for="username">Usuario iRacing:</label><br />
+        <input type="text" id="username" name="username" placeholder="Tu usuario"
+            style="padding: 5px; margin-bottom: 10px; width: 250px" /><br />
 
-    <label for="password">Contraseña:</label><br />
-    <input type="password" id="password" name="password" placeholder="Tu contraseña"
-      style="padding: 5px; margin-bottom: 10px; width: 250px" /><br />
+        <label for="password">Contraseña:</label><br />
+        <input type="password" id="password" name="password" placeholder="Tu contraseña"
+            style="padding: 5px; margin-bottom: 10px; width: 250px" /><br />
 
-    <button id="loadCarsButton" onclick="fetchCarsList()" style="padding: 8px 15px; font-size: 14px">
-      Load Cars
-    </button>
-  </div>
+        <button id="loadCarsButton" onclick="fetchCarsList()" style="padding: 8px 15px; font-size: 14px">
+            Load Cars
+        </button>
+    </div>
 
-  <div id="loading" class="loading" style="display: none; text-align: center">
-    ⏳ Cargando... ⏳
-  </div>
+    <div id="loading" class="loading" style="display: none; text-align: center">
+        ⏳ Cargando... ⏳
+    </div>
 
-  <input type="text" id="search-box" placeholder="Buscar auto..." style="display:none;" />
+    <input type="text" id="search-box" placeholder="Buscar auto..." style="display: none" />
 
-  <div id="table-container" style="text-align: center"></div>
+    <div id="table-container" style="text-align: center"></div>
 
-  <script>
-    function fetchCarsList() {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value.trim();
+    <script>
+        function fetchCarsList() {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
 
-      if (!username || !password) {
-        alert("Por favor, complete usuario y contraseña.");
-        return;
-      }
+            if (!username || !password) {
+                alert("Por favor, complete usuario y contraseña.");
+                return;
+            }
 
-      document.getElementById("loading").style.display = "block";
+            document.getElementById("loading").style.display = "block";
 
-      fetch('/get_all_cars', {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password })
-      })
-        .then(res => res.json())
-        .then(carsData => {
-          let table = '<table><thead><tr>';
-          table += '<th>Imagen</th><th>Marca</th><th>Modelo</th><th>Nombre</th><th>HP</th><th>Peso</th><th>Tiene Luces</th><th>No retirado (Legacy)</th><th>Precio</th><th>Link</th>';
-          table += '</tr></thead><tbody>';
+            fetch("/get_all_cars", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password }),
+            })
+                .then((res) => res.json())
+                .then((carsData) => {
+                    let table = "<table><thead><tr>";
+                    table +=
+                        "<th>Imagen</th><th>Marca</th><th>Modelo</th><th>Nombre</th><th>HP</th><th>Peso</th><th>Tiene Luces</th><th>No retirado (Legacy)</th><th>Precio</th><th>Link</th>";
+                    table += "</tr></thead><tbody>";
 
-          Object.values(carsData.cars).forEach(car => {
-            const imgUrl = `https://images-static.iracing.com/${car.folder}/${car.small_image}`;
-            table += `
+                    Object.values(carsData.cars).forEach((car) => {
+                        const imgUrl = `https://images-static.iracing.com/${car.folder}/${car.small_image}`;
+                        table += `
               <tr>
-                <td><img src="${imgUrl}" alt="${car.car_name}" class="car-thumb"></td>
-                <td>${car.car_make ?? '-'}</td>
-                <td>${car.car_model ?? '-'}</td>
-                <td>${car.car_name ?? '-'}</td>
-                <td>${car.hp ?? '-'} HP</td>
-                <td>${car.car_weight ?? '-'} Kg</td>
-                <td>${car.has_headlights ? '✔️' : '❌'}</td>
-                <td>${car.retired ? '❌' : '✔️'}</td>
-                <td>${car.price_display ?? '-'}</td>
-                <td><a href="${car.site_url ?? ''}" target="_blank" class="car-link">${car.site_url ?? '-'}</a></td>
+                <td><img src="${imgUrl}" alt="${car.car_name
+                            }" class="car-thumb"></td>
+                <td>${car.car_make ?? "-"}</td>
+                <td>${car.car_model ?? "-"}</td>
+                <td>${car.car_name ?? "-"}</td>
+                <td>${car.hp ?? "-"} HP</td>
+                <td>${car.car_weight ?? "-"} Kg</td>
+                <td>${car.has_headlights ? "✔️" : "❌"}</td>
+                <td>${car.retired ? "❌" : "✔️"}</td>
+                <td>${car.price_display ?? "-"}</td>
+                <td><a href="${car.site_url ?? ""
+                            }" target="_blank" class="car-link">${car.site_url ?? "-"
+                            }</a></td>
               </tr>`;
-          });
+                    });
 
-          table += '</tbody></table>';
-          document.getElementById("table-container").innerHTML = table;
-          document.getElementById("search-box").style.display = "block";
+                    table += "</tbody></table>";
+                    document.getElementById("table-container").innerHTML = table;
+                    document.getElementById("search-box").style.display = "block";
 
-          // filtro en vivo
-          document.getElementById('search-box').addEventListener('input', function () {
-            const filter = this.value.toLowerCase();
-            document.querySelectorAll("#table-container tbody tr").forEach(row => {
-              const text = row.innerText.toLowerCase();
-              row.style.display = text.includes(filter) ? '' : 'none';
-            });
-          });
-        })
-        .finally(() => {
-          document.getElementById("loading").style.display = "none";
-        });
-    }
-  </script>
+                    // filtro en vivo
+                    document
+                        .getElementById("search-box")
+                        .addEventListener("input", function () {
+                            const filter = this.value.toLowerCase();
+                            document
+                                .querySelectorAll("#table-container tbody tr")
+                                .forEach((row) => {
+                                    const text = row.innerText.toLowerCase();
+                                    row.style.display = text.includes(filter) ? "" : "none";
+                                });
+                        });
+                })
+                .finally(() => {
+                    document.getElementById("loading").style.display = "none";
+                });
+        }
+    </script>
 </body>
+
 </html>
