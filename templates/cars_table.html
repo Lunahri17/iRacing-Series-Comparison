@@ -93,7 +93,7 @@
         .then(res => res.json())
         .then(carsData => {
           let table = '<table><thead><tr>';
-          table += '<th>Imagen</th><th>Marca</th><th>Modelo</th><th>Nombre</th><th>HP</th><th>Peso</th><th>Tiene Luces</th><th>Precio</th><th>Link</th>';
+          table += '<th>Imagen</th><th>Marca</th><th>Modelo</th><th>Nombre</th><th>HP</th><th>Peso</th><th>Tiene Luces</th><th>Precio</th><th>No retirado (Legacy))</th><th>Link</th>';
           table += '</tr></thead><tbody>';
 
           Object.values(carsData.cars).forEach(car => {
@@ -107,6 +107,7 @@
                 <td>${car.hp ?? '-'}</td>
                 <td>${car.car_weight ?? '-'}</td>
                 <td>${car.has_headlights ? '✔️' : '❌'}</td>
+                <td>${car.retired ? '❌' : '✔️'}</td>
                 <td>${car.price_display ?? '-'}</td>
                 <td><a href="${car.site_url ?? 'lunahri.net.ar'}" target="_blank" class="car-link">${car.site_url ?? 'lunahri.net.ar'}</a></td>
               </tr>`;
