@@ -37,8 +37,8 @@
     }
 
     img.car-thumb {
-      max-width: 120px;
-      border-radius: 6px;
+      max-width: 400px;
+      border-radius: 12px;
     }
 
     a.car-link {
@@ -96,18 +96,19 @@
           table += '<th>Imagen</th><th>Make</th><th>Model</th><th>Car Name</th><th>HP</th><th>Peso</th><th>Headlights</th><th>Precio</th><th>Link</th>';
           table += '</tr></thead><tbody>';
 
-          Object.values(carsData).forEach(car => {
+          Object.values(carsData.cars).forEach(car => {
             const imgUrl = `https://images-static.iracing.com/${car.folder}/${car.small_image}`;
             table += `
               <tr>
                 <td><img src="${imgUrl}" alt="${car.car_name}" class="car-thumb"></td>
-                <td>${car.car_make}</td>
-                <td>${car.car_model}</td>
+                <td>${car.car_make ?? '-'}</td>
+                <td>${car.car_model ?? '-'}</td>
+                <td>${car.car_name ?? '-'}</td>
                 <td>${car.hp ?? '-'}</td>
                 <td>${car.car_weight ?? '-'}</td>
                 <td>${car.has_headlights ? '✔️' : '❌'}</td>
                 <td>${car.price_display ?? '-'}</td>
-                <td><a href="${car.site_url}" target="_blank" class="car-link">${car.site_url}</a></td>
+                <td><a href="${car.site_url ?? 'lunahri.net.ar'}" target="_blank" class="car-link">${car.site_url ?? 'lunahri.net.ar'}</a></td>
               </tr>`;
           });
 
