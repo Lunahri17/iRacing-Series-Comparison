@@ -4,6 +4,8 @@ import iracing_data_transform
 
 app = Flask(__name__)
 
+
+## Renders
 @app.route('/dev')
 def dev():
     return render_template('series_table_dev.html')
@@ -12,11 +14,16 @@ def dev():
 def home():
     return render_template('series_table.html')
 
-
 @app.route('/all_dates')
 def all_dates():
     return render_template('series_table_all_dates.html')
 
+@app.route('/cars')
+def all_cars():
+    return render_template('cars_table.html')
+
+
+## APIs
 @app.route('/get_series_list', methods=['POST'])
 def get_series_list():
     data = request.get_json()
@@ -48,6 +55,21 @@ def get_series_table():
 
     return jsonify({"series": series, "all_dates": all_dates})
 
+@app.route('/get_all_cars', methods=['POST'])
+def get_all_cars():
+    data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
+
+    if not username or not password:
+        return jsonify({"error": "Usuario y contraseña requeridos"}), 400
+
+    cars = iracing_data_transform.get_all_licenced_cars(username, password)
+
+    return jsonify({"cars": cars})
+
+
+## Legacy
 @app.route('/v1')
 def __series_table_v1():
     return render_template('series_table_v1.html')

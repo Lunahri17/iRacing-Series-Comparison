@@ -13,11 +13,11 @@ def main():
     username = "local"
     password = "local&"
 
-    series_filtered = iracing_data_transform.get_dict_of_all_series(username, password)
+    #series_filtered = iracing_data_transform.get_dict_of_all_series(username, password)
+    #series = iracing_data_transform.get_relevant_data(username, password, series_filtered)
+    cars = iracing_data_transform.get_all_licenced_cars(username, password)
 
-    series = iracing_data_transform.get_relevant_data(username, password, series_filtered)
-
-    save_file("series.json", series)
+    save_file("series.json", cars)
 
     with open("payloads/x_car_get.json", "r", encoding="utf-8") as f:
         car_data_get = json.load(f)
