@@ -93,7 +93,7 @@
         .then(res => res.json())
         .then(carsData => {
           let table = '<table><thead><tr>';
-          table += '<th>Imagen</th><th>Make</th><th>Model</th><th>Car Name</th><th>HP</th><th>Peso</th><th>Headlights</th><th>Precio</th><th>Link</th>';
+          table += '<th>Imagen</th><th>Marca</th><th>Modelo</th><th>Nombre</th><th>HP</th><th>Peso</th><th>Tiene Luces</th><th>Precio</th><th>Link</th>';
           table += '</tr></thead><tbody>';
 
           Object.values(carsData.cars).forEach(car => {
