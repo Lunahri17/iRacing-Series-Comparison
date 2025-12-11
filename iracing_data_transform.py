@@ -5,8 +5,8 @@ import iracing_api_calls
 from ir_types.cars_category import Car_Catergory
 
 
-def get_onlys_series_name(username: str = "", password: str = "", data: dict = []) -> dict:
-    licence_groups = __get_licence_groups(username, password)
+def get_onlys_series_name(token: str = "", data: dict = []) -> dict:
+    licence_groups = __get_licence_groups(token)
     series = []
 
     for serie in data:
@@ -22,13 +22,13 @@ def get_onlys_series_name(username: str = "", password: str = "", data: dict = [
         })
     return series
 
-def get_relevant_data(username: str = "", password: str = "", data: dict = []) -> dict:
-    track_data_with_id = __get_track_data(username, password)
-    cars_data = __get_car_data_by_carid(username, password)
-    car_class_data = __get_car_class_data(username, password)
-    member_licensed_tracks, member_licensed_cars = __get_member_licensed_cars_and_tracks(username, password)
+def get_relevant_data(token: str = "" , data: dict = []) -> dict:
+    track_data_with_id = __get_track_data(token)
+    cars_data = __get_car_data_by_carid(token)
+    car_class_data = __get_car_class_data(token)
+    member_licensed_tracks, member_licensed_cars = __get_member_licensed_cars_and_tracks(token)
 
-    licence_groups = __get_licence_groups(username, password)
+    licence_groups = __get_licence_groups(token)
     series = []
 
     for serie in data:
@@ -76,13 +76,13 @@ def get_relevant_data(username: str = "", password: str = "", data: dict = []) -
         })
     return series
 
-def get_dict_of_all_series(username: str = "", password: str = "") -> dict:
-    series = iracing_api_calls.get_series(username, password)
+def get_dict_of_all_series(token: str = "") -> dict:
+    series = iracing_api_calls.get_series(token)
     return series
 
-def get_all_licenced_cars(username: str = "", password: str = "") -> dict:
-    all_cars_data = __get_car_data_by_car_package_id(username, password)
-    _, all_licenced_cars_ids = __get_member_licensed_cars_and_tracks(username, password)
+def get_all_licenced_cars(token: str = "") -> dict:
+    all_cars_data = __get_car_data_by_car_package_id(token)
+    _, all_licenced_cars_ids = __get_member_licensed_cars_and_tracks(token)
 
     result = {k: v for k, v in all_cars_data.items() if k in all_licenced_cars_ids}
 
@@ -102,8 +102,8 @@ def __get_category_human_name(category: str = "default") -> str:
     }
     return categorys[category]
 
-def __get_licence_groups(username: str = "", password: str = "") -> dict:
-    license_groups = iracing_api_calls.get_licence_info(username, password)
+def __get_licence_groups(token: str = "") -> dict:
+    license_groups = iracing_api_calls.get_licence_info(token)
     license_groups_by_id = {p["license_group"]: p for p in license_groups}
     return license_groups_by_id
 
@@ -121,8 +121,8 @@ def __check_member_has_licensed_car(member_licensed_cars: dict, car_id: str) -> 
     except:
         return "false"
 
-def __get_member_licensed_cars_and_tracks(username: str = "", password: str = "") -> tuple[dict, dict]:
-    member_info = iracing_api_calls.get_member_info(username, password)
+def __get_member_licensed_cars_and_tracks(token: str = "") -> tuple[dict, dict]:
+    member_info = iracing_api_calls.get_member_info(token)
     track_packages = member_info.get("track_packages", None)
     track_ids = {}
     for track_packege in track_packages:
@@ -165,23 +165,23 @@ def __get_color_by_track_id(track_id: str):
     hex_color = f"#{r:02X}{g:02X}{b:02X}"
     return hex_color
 
-def __get_car_data_by_carid(username: str = "", password: str = "") -> dict:
-    car_data = iracing_api_calls.get_cars(username, password)
+def __get_car_data_by_carid(token: str = "") -> dict:
+    car_data = iracing_api_calls.get_cars(token)
     car_data_by_id = {p["car_id"]: p for p in car_data}
     return car_data_by_id
 
-def __get_car_data_by_car_package_id(username: str = "", password: str = "") -> dict:
-    car_data = iracing_api_calls.get_cars(username, password)
+def __get_car_data_by_car_package_id(token: str = "") -> dict:
+    car_data = iracing_api_calls.get_cars(token)
     car_data_by_car_package_id = {p["package_id"]: p for p in car_data}
     return car_data_by_car_package_id
 
-def __get_car_class_data(username: str = "", password: str = "") -> dict:
-    car_class_data = iracing_api_calls.get_car_class(username, password)
+def __get_car_class_data(token: str = "") -> dict:
+    car_class_data = iracing_api_calls.get_car_class(token)
     car_class_data_by_id = {p["car_class_id"]: p for p in car_class_data}
     return car_class_data_by_id
 
-def __get_track_data(username: str = "", password: str = "") -> dict:
-    track_data = iracing_api_calls.get_tracks(username, password)
+def __get_track_data(token: str = "") -> dict:
+    track_data = iracing_api_calls.get_tracks(token)
     track_data_with_id = {p["track_id"]: p for p in track_data}
     return track_data_with_id
 
@@ -191,8 +191,8 @@ def __get_monday(date_str):
     return monday.strftime("%Y-%m-%d")
 
 
-def _get_dict_of_serie(username: str = "", password: str = "", category: Car_Catergory = Car_Catergory.SPORTS_CAR) -> dict:
-    series = iracing_api_calls.get_series(username, password)
+def _get_dict_of_serie(token: str = "" , category: Car_Catergory = Car_Catergory.SPORTS_CAR) -> dict:
+    series = iracing_api_calls.get_series(token)
     series_filetered= []
 
     for serie in series:

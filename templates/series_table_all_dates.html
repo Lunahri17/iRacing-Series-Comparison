@@ -41,12 +41,6 @@
     <h1 style="text-align:center;">Series iRacing</h1>
     
     <div id="login-container" style="margin-bottom: 20px;text-align:center;">
-        <label for="username">Usuario iRacing:</label><br>
-        <input type="text" id="username" name="username" placeholder="Tu usuario" style="padding: 5px; margin-bottom: 10px; width: 250px;"><br>
-
-        <label for="password">Contraseña:</label><br>
-        <input type="password" id="password" name="password" placeholder="Tu contraseña" style="padding: 5px; margin-bottom: 10px; width: 250px;"><br>
-
         <button id="loadSeriesButton" onclick="fetchSeriesList()" style="padding: 8px 15px; font-size: 14px;">Cargar Series</button>
     </div>
 
@@ -64,22 +58,10 @@
         let selectedSeries = JSON.parse(localStorage.getItem('selectedSeries')) || [];
 
         function fetchSeriesList() {
-            const username = document.getElementById("username").value.trim();
-            const password = document.getElementById("password").value.trim();
-
-            if (!username || !password) {
-                alert("Por favor, complete usuario y contraseña.");
-                return;
-            }
-
             document.getElementById("loading").style.display = "block";
 
             fetch('/get_series_list', {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ username, password })
+                    method: "POST"
                 })
                 .then(res => res.json())
                 .then(seriesNames => {
@@ -181,22 +163,10 @@
         }
 
         function loadTable() {
-            const username = document.getElementById("username").value.trim();
-            const password = document.getElementById("password").value.trim();
-
-            if (!username || !password) {
-                alert("Por favor, complete usuario y contraseña.");
-                return;
-            }
-
             document.getElementById("loading").style.display = "block";
 
             fetch('/get_series_table', {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({ username, password })
+                    method: "POST"
                 })
                 .then(response => response.json())
                 .then(data => {
