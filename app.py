@@ -3,8 +3,8 @@ import time
 import base64
 import hashlib
 import requests
-from dotenv import load_dotenv
 from functools import wraps
+from dotenv import load_dotenv
 from flask import Flask, redirect, request, session, url_for, render_template, jsonify
 
 import iracing_data_transform
@@ -27,11 +27,11 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if "access_token" not in session:
-            return redirect(url_for("login"))
+            return redirect(url_for("index"))
 
         if is_token_expired():
             if not refresh_access_token():
-                return redirect(url_for("login"))
+                return redirect(url_for("index"))
 
         return f(*args, **kwargs)
     return decorated_function
@@ -40,6 +40,8 @@ def login_required(f):
 # region Renders
 @app.route("/")
 def index():
+    if session.get("access_token"):
+        return redirect(url_for("profile"))
     return render_template("index.html")
 
 @app.route('/dev')
@@ -68,17 +70,7 @@ def all_cars():
 @login_required
 def profile():
     token = session.get("access_token")
-    headers = {
-        "Authorization": f"Bearer {token}"
-    }
-
-    response = requests.get(PROFILE_URL, headers=headers, timeout=60)
-
-    if response.status_code != 200:
-        return f"Error fetching profile: {response.text}", 400
-
-    profile_data = response.json()
-
+    profile_data = iracing_data_transform.get_user_profile_info(token)
     return render_template("profile.html", profile=profile_data)
 # enregion Home
 

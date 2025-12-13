@@ -55,5 +55,7 @@ function fetchCarsList() {
     .finally(() => {
       document.getElementById("loading").style.display = "none";
       document.getElementById("load-cars-button").style.display = "block";
+      document.getElementById("cars-container").style.display = "block";
+      
     });
 }

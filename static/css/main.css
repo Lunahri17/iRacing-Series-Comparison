@@ -79,6 +79,10 @@ body {
 
 /* Tablas */
 .table-wrapper {
+    display: inline-block;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
     width: 95%;
     margin: 20px auto;
 }
@@ -113,10 +117,14 @@ th {
     text-align: left;
     font-size: 20px;
     padding: 5px;
+    display: inline-block;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
 }
 
 .search-box {
-    width: 100%;
+    width: 98%;
     padding: 6px;
     margin-bottom: 8px;
 }
@@ -138,4 +146,136 @@ th {
 
 .checkbox-label input {
     margin-right: 6px;
+}
+
+
+/* =========================
+   Licenses
+   ========================= */
+
+.licenses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.license-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.license-header {
+    padding-left: 10px;
+    margin-bottom: 10px;
+}
+
+.license-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.license-group {
+    font-size: 13px;
+    color: #666;
+}
+
+.license-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.license-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+}
+
+.table-scroll {
+    overflow-x: auto;
+    width: 100%;
+}
+
+/* tabla */
+.series-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px; /* evita que se aplaste */
+}
+
+/* celdas */
+.series-table th,
+.series-table td {
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* encabezado */
+.series-table th {
+    background-color: #ccc;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* primera columna fija */
+.series-table td:first-child,
+.series-table th:first-child {
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 3;
+}
+
+/* columna cars alineada a la izquierda */
+.series-table td.cars-cell {
+    text-align: left;
+    white-space: normal;
+}
+
+/* tracks */
+.track-cell {
+    min-width: 70px;
+    cursor: pointer;
+}
+
+/* mobile */
+@media (max-width: 768px) {
+    .table-wrapper {
+        padding: 10px;
+    }
+
+    .series-table th,
+    .series-table td {
+        font-size: 12px;
+        padding: 4px;
+    }
+}
+
+.car-class {
+    margin-bottom: 4px;
+}
+
+.car-name {
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.owned-car {
+    font-weight: bold;
+    background: #00ff2f;
+}
+
+.track-owned {
+    border: 2px solid #000;
+    background-clip: padding-box;
+}
+
+.track-not-owned {
+    border: 2px dotted #999;
 }

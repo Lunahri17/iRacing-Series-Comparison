@@ -1,13 +1,41 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Perfil iRacing</title>
-</head>
-<body>
-    {% include "header.html" %}
-    <h1>Perfil de iRacing</h1>
+{% extends "base.html" %} {% block title %}Perfil iRacing{% endblock %} {% block
+content %}
+<h1>Perfil iRacing</h1>
 
-    <p><strong>Nombre:</strong> {{ profile.iracing_name }}</p>
-    <p><strong>Customer ID:</strong> {{ profile.iracing_cust_id }}</p>
-</body>
-</html>
+<div class="profile-card">
+  <p><strong>Nombre:</strong> {{ profile.display_name }}</p>
+  <p><strong>Customer ID:</strong> {{ profile.cust_id }}</p>
+  <p><strong>Miembro desde:</strong> {{ profile.member_since }}</p>
+  <p><strong>Último Login:</strong> {{ profile.last_login }}</p>
+  <h2>Licencias</h2>
+
+  <div class="licenses-grid">
+    {% for key, lic in profile.licenses.items() %}
+    <div class="license-card">
+      <div
+        class="license-header"
+        style="border-left: 6px solid #{{ lic.color }}"
+      >
+        <h3>{{ lic.category_name }}</h3>
+        <span class="license-group">{{ lic.group_name }}</span>
+      </div>
+
+      <div class="license-body">
+        <div class="license-row">
+          <span>🏁 iRating</span>
+          <strong>{{ lic.irating }}</strong>
+        </div>
+        <div class="license-row">
+          <span>⏱ TT Rating</span>
+          <strong>{{ lic.tt_rating }}</strong>
+        </div>
+        <div class="license-row">
+          <span>🛡 Safety Rating</span>
+          <strong>{{ "%.2f"|format(lic.safety_rating) }}</strong>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

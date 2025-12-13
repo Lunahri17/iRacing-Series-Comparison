@@ -65,6 +65,7 @@ function fetchSeriesList() {
       document.getElementById("loadTableButton").style.display = "block";
       document.getElementById("search-box").style.display = "block"
       document.getElementById("options-bar").style.display = "block";
+      document.getElementById("series-selector").style.display = "block";
     });
 }
 
@@ -195,6 +196,8 @@ function isLoadAllDatesEnabled() {
     return document.getElementById("load-all-dates").checked;
 }
 
+//OLD
+
 function loadTable() {
   document.getElementById("loadTableButton").style.display = "none";
   document.getElementById("options-bar").style.display = "none";
@@ -225,12 +228,7 @@ function loadTable() {
         });
       });
 
-      let table = "<table><thead><tr>";
-      table +=
-        "<th>Serie</th><th>Licencia</th><th>Race Week</th><th>Category</th><th>Cars</th>";
-      
-
-      let futureDates
+      let futureDates;
       if (isLoadAllDatesEnabled()) {
         futureDates = data.all_dates;
         
@@ -239,11 +237,26 @@ function loadTable() {
         futureDates = data.all_dates.filter((d) => d >= mondayStr);
       }
 
+      let table = `
+        <table>
+          <thead>
+            <tr>
+              <th>Serie</th>
+              <th>Licencia</th>
+              <th>Race Week</th>
+              <th>Category</th>
+              <th>Cars</th>
+      `;
+
       futureDates.forEach((date) => {
         table += `<th>${date}</th>`;
       });
 
-      table += "</tr></thead><tbody>";
+      table += `
+            </tr>
+          </thead>
+          <tbody>
+      `;
 
       filteredSeries.forEach((serie) => {
         let carsByClass = {};
@@ -309,6 +322,144 @@ function loadTable() {
       updateTrackHighlights();
     })
     .finally(() => {
+      document.getElementById("table-container").style.display = "block";
+      document.getElementById("loading").style.display = "none";
+      document.getElementById("loadTableButton").style.display = "block";
+      document.getElementById("options-bar").style.display = "block";
+    });
+}
+
+function loadTablev2() {
+  document.getElementById("loadTableButton").style.display = "none";
+  document.getElementById("options-bar").style.display = "none";
+  document.getElementById("loading").style.display = "block";
+
+  fetch("/get_series_table", {
+    method: "POST",
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      let filteredSeries = data.series.filter((s) =>
+        selectedSeries.includes(s.serie_name)
+      );
+
+      filteredSeries.sort((a, b) => {
+        const licenceCompare = a.licence_group.localeCompare(
+          b.licence_group,
+          "en",
+          { sensitivity: "base" }
+        );
+        if (licenceCompare !== 0) return licenceCompare;
+        const categoryCompare = a.category.localeCompare(b.category, "en", {
+          sensitivity: "base",
+        });
+        if (categoryCompare !== 0) return categoryCompare;
+        return a.serie_name.localeCompare(b.serie_name, "en", {
+          sensitivity: "base",
+        });
+      });
+
+      let futureDates;
+      if (isLoadAllDatesEnabled()) {
+        futureDates = data.all_dates;
+        
+      } else {
+        const mondayStr = formatDate(getThisMonday());
+        futureDates = data.all_dates.filter((d) => d >= mondayStr);
+      }
+
+      let table = `
+        <table class="series-table">
+          <thead>
+            <tr>
+              <th>Serie</th>
+              <th>Licencia</th>
+              <th>Race Week</th>
+              <th>Category</th>
+              <th>Cars</th>
+      `;
+
+      futureDates.forEach((date) => {
+        table += `<th>${date}</th>`;
+      });
+
+      table += `
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      filteredSeries.forEach((serie) => {
+        let carsByClass = {};
+        serie.cars_ids.forEach((car) => {
+          if (!carsByClass[car.car_class]) carsByClass[car.car_class] = [];
+          carsByClass[car.car_class].push(car);
+        });
+
+        let carsHTML = "";
+        Object.entries(carsByClass).forEach(([carClass, cars]) => {
+          carsHTML += `<div class="car-class"><strong>${carClass}</strong>: `;
+          cars.forEach((car, idx) => {
+            const ownedClass = car.car_owned === "true" ? "owned-car" : "";
+            carsHTML += `
+              <span class="car-name ${ownedClass}">
+                ${car.car_name}
+              </span>${idx < cars.length - 1 ? ", " : ""}
+            `;
+          });
+          carsHTML += `</div>`;
+        });
+
+        table += `
+          <tr>
+            <td>${serie.serie_name}</td>
+            <td>${serie.licence_group}</td>
+            <td>${serie.race_week}</td>
+            <td>${serie.category}</td>
+            <td class="cars-cell">${carsHTML}</td>
+        `;
+
+        futureDates.forEach((date) => {
+          let track = "-";
+          let color = "transparent";
+          let trackOwned = "false";
+          serie.schedules.forEach((sch) => {
+            if (sch.start_date_week === date) {
+              track = sch.track_id;
+              color = sch.track_id_color || "transparent";
+              trackOwned = sch.track_owned || "false";
+            }
+          });
+
+          const ownedClass =
+            trackOwned === "true" ? "track-owned" : "track-not-owned";
+
+          table += `
+            <td class="track-cell ${ownedClass}" style="background-color:${color}">
+              ${track}
+            </td>
+          `;
+        });
+
+        table += `</tr>`;
+      });
+
+      table += `
+          </tbody>
+        </table>
+      `;
+
+      // Insertar tabla
+      const container = document.getElementById("table-container");
+      container.innerHTML = table;
+
+      // Hooks existentes
+      makeTableSortable();
+      enableTrackSelection();
+      updateTrackHighlights();
+    })
+    .finally(() => {
+      document.getElementById("table-container").style.display = "block";
       document.getElementById("loading").style.display = "none";
       document.getElementById("loadTableButton").style.display = "block";
       document.getElementById("options-bar").style.display = "block";

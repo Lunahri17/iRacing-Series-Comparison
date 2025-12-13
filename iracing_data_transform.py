@@ -4,6 +4,9 @@ from hashlib import sha256
 import iracing_api_calls
 from ir_types.cars_category import Car_Catergory
 
+def get_user_profile_info(token: str) -> dict:
+    member_info = iracing_api_calls.get_member_info(token)
+    return member_info
 
 def get_onlys_series_name(token: str = "", data: dict = []) -> dict:
     licence_groups = __get_licence_groups(token)
@@ -205,28 +208,3 @@ def _get_dict_of_serie(token: str = "" , category: Car_Catergory = Car_Catergory
 
     return series_filetered
 
-def _get_series_OLD() -> dict:
-    series = iracing_api_calls.get_series()
-    
-    series_sports_car = []
-    series_formula = []
-    test = []
-
-    for serie in series:
-        schedueles = serie.get("schedules", [])
-        schedule = schedueles[0]
-        serie_type = schedule.get("category", "")
-
-        name = serie.get("season_name", "")
-        entry = {
-            "name": name,
-            "catergory": serie_type
-        }
-        test.append(entry)
-
-        if serie_type == "sports_car":
-            series_sports_car.append(serie)
-
-        if serie_type == "formula_car":
-            series_formula.append(serie)
-    return series_sports_car, series_formula
