@@ -1,246 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Series iRacing</title>
-    <style>
-        table {
-            border-collapse: collapse;
-            width: 95%;
-            margin: 20px auto;
-        }
-        th, td {
-            padding: 6px;
-            text-align: center;
-        }
-        th {
-            background-color: #ddd;
-        }
-        button {
-            display: block;
-            margin: 20px auto;
-            padding: 10px 15px;
-            font-size: 16px;
-        }
-        #series-selector {
-            width: 1000px;
-            margin: 10px auto;
-            text-align: left;
-            font-size: 20px;   /* ajustá el tamaño que quieras */
-            padding: 5px;
-        }
-        #search-box {
-            width: 100%;
-            padding: 6px;
-            margin-bottom: 8px;
-        }
-    </style>
-</head>
-<body>
-    {% include "header.html" %}
-    <h1 style="text-align:center;">Series iRacing</h1>
-    
-    <div id="login-container" style="margin-bottom: 20px;text-align:center;">
-        <button id="loadSeriesButton" onclick="fetchSeriesList()"  class="btn-primary">Cargar Series</button>
-    </div>
+{% extends "base.html" %}
+{% block title %}Series iRacing: Todas las semanas{% endblock %}
 
-    <div id="loading" class="loading" style="display:none;text-align:center">⏳ Cargando...</div>
+{% block content %}
+<h1>Series iRacing: Todas las semanas</h1>
 
-    <button id="loadTableButton" onclick="loadTable()" style="display:none"  class="btn-primary">Cargar Tabla</button>
-    <div id="table-container" style="text-align:center;"></div>
+<button class="btn-primary" onclick="fetchSeriesList()">
+    Cargar Series
+</button>
 
-    <div id="series-selector" style="text-align:left">
-        <input type="text" id="search-box" placeholder="Buscar serie...">
-        <div id="series-list"></div>
-    </div>
+<div id="loading" style="display:none">⏳ Cargando...</div>
 
-    <script>
-        let selectedSeries = JSON.parse(localStorage.getItem('selectedSeries')) || [];
+<button id="loadTableButton"
+        class="btn-primary"
+        onclick="loadTable()"
+        style="display:none">
+    Cargar Tabla
+</button>
 
-        function fetchSeriesList() {
-            document.getElementById("loading").style.display = "block";
+<div id="series-selector">
+    <input type="text" id="search-box" placeholder="Buscar serie...">
+    <div id="series-list"></div>
+</div>
 
-            fetch('/get_series_list', {
-                    method: "POST"
-                })
-                .then(res => res.json())
-                .then(seriesNames => {
-                    const listContainer = document.getElementById('series-list');
-                    listContainer.innerHTML = '';
+<div id="table-container" class="table-wrapper"></div>
 
-                    seriesNames.sort((a, b) => {
-                        // 1️⃣ Ordenar por licencia
-                        const licenceCompare = a.licence_group.localeCompare(b.licence_group, 'en', { sensitivity: 'base' });
-                        if (licenceCompare !== 0) {
-                            return licenceCompare;
-                        }
-
-                        // 2️⃣ Si la licencia es igual, ordenar por categoría
-                        const categoryCompare = a.category.localeCompare(b.category, 'en', { sensitivity: 'base' });
-                        if (categoryCompare !== 0) {
-                            return categoryCompare;
-                        }
-
-                        // 3️⃣ Si también la categoría es igual, ordenar por nombre de serie
-                        return a.serie_name.localeCompare(b.serie_name, 'en', { sensitivity: 'base' });
-                    });
-
-                    seriesNames.forEach(serie => {
-                        const isChecked = selectedSeries.includes(serie.serie_name);
-                        const div = document.createElement('div');
-                        div.innerHTML = `
-                            <label>
-                                <input type="checkbox" value="${serie.serie_name}" ${isChecked ? 'checked' : ''} onchange="toggleSeries(this)">
-                                Licencia: ${serie.licence_group} - Categoria: ${serie.category} - ${serie.serie_name}
-                            </label>
-                        `;
-                        listContainer.appendChild(div);
-                    });
-
-                    // Filtro de búsqueda
-                    document.getElementById('search-box').addEventListener('input', function () {
-                        const filter = this.value.toLowerCase();
-                        const labels = listContainer.querySelectorAll('label');
-                        labels.forEach(label => {
-                            label.parentElement.style.display =
-                                label.textContent.toLowerCase().includes(filter) ? '' : 'none';
-                        });
-                    });
-                }).finally(() => {
-                    document.getElementById("loading").style.display = "none";
-                    document.getElementById("loadTableButton").style.display = "block";
-                });
-        }
-
-        function toggleSeries(checkbox) {
-            const value = checkbox.value;
-            if (checkbox.checked) {
-                if (!selectedSeries.includes(value)) selectedSeries.push(value);
-            } else {
-                selectedSeries = selectedSeries.filter(s => s !== value);
-            }
-            localStorage.setItem('selectedSeries', JSON.stringify(selectedSeries));
-        }
-
-        function sortTable(table, col) {
-            const tbody = table.tBodies[0];
-            const rows = Array.from(tbody.querySelectorAll("tr"));
-
-            const asc = !(table.dataset.sortAsc === "true" && table.dataset.sortCol == col);
-            table.dataset.sortAsc = asc;
-            table.dataset.sortCol = col;
-
-            rows.sort((a, b) => {
-                let A = a.children[col].innerText.trim();
-                let B = b.children[col].innerText.trim();
-
-                // detectar si ambos son números
-                const numA = parseFloat(A.replace(",", "."));  
-                const numB = parseFloat(B.replace(",", "."));
-                const isNumeric = !isNaN(numA) && !isNaN(numB);
-
-                if (isNumeric) {
-                    return asc ? numA - numB : numB - numA;
-                } else {
-                    return asc 
-                        ? A.localeCompare(B, undefined, { sensitivity: 'base', numeric: true })
-                        : B.localeCompare(A, undefined, { sensitivity: 'base', numeric: true });
-                }
-            });
-
-            rows.forEach(row => tbody.appendChild(row));
-        }
-
-        // Delegar eventos después de renderizar la tabla
-        function makeTableSortable() {
-            const table = document.querySelector("#table-container table");
-            if (!table) return;
-
-            table.querySelectorAll("th").forEach((th, i) => {
-                th.style.cursor = "pointer";
-                th.addEventListener("click", () => sortTable(table, i));
-            });
-        }
-
-        function loadTable() {
-            document.getElementById("loading").style.display = "block";
-
-            fetch('/get_series_table', {
-                    method: "POST"
-                })
-                .then(response => response.json())
-                .then(data => {
-                    let filteredSeries = data.series.filter(s => selectedSeries.includes(s.serie_name));
-
-                    let table = '<table><thead><tr>';
-                    table += '<th>Serie</th><th>Licencia</th><th>Race Week</th><th>Category</th><th>Cars</th>';
-
-                    const futureDates = data.all_dates;
-
-                    futureDates.forEach(date => {
-                        table += `<th>${date}</th>`;
-                    });
-
-                    table += '</tr></thead><tbody>';
-
-                    filteredSeries.forEach(serie => {
-                        // Agrupar autos por clase y resaltar los owned
-                        let carsByClass = {};
-                        serie.cars_ids.forEach(car => {
-                            if (!carsByClass[car.car_class]) carsByClass[car.car_class] = [];
-                            carsByClass[car.car_class].push(car);
-                        });
-
-                        let carsHTML = '';
-                        for (const [carClass, cars] of Object.entries(carsByClass)) {
-                            carsHTML += `<div style="margin-bottom:4px;"><strong>${carClass}</strong>: `;
-                            cars.forEach((car, idx) => {
-                                const style = car.car_owned === "true"
-                                    ? 'font-weight:bold; background:#00ff2f; padding:2px 4px; border-radius:4px;'
-                                    : '';
-                                carsHTML += `<span style="${style}">${car.car_name}</span>${idx < cars.length - 1 ? ', ' : ''}`;
-                            });
-                            carsHTML += '</div>';
-                        }
-
-                        table += `<tr>
-                            <td style="border: 1px solid black">${serie.serie_name}</td>
-                            <td style="border: 1px solid black">${serie.licence_group}</td>
-                            <td style="border: 1px solid black">${serie.race_week}</td>
-                            <td style="border: 1px solid black">${serie.category}</td>
-                            <td style="border: 1px solid black; text-align:left;">${carsHTML}</td>`;
-
-                        futureDates.forEach(date => {
-                            let track = '-';
-                            let color = 'transparent';
-                            let trackOwned = 'false';
-                            serie.schedules.forEach(sch => {
-                                if (sch.start_date_week === date) {
-                                    track = sch.track_id;
-                                    color = sch.track_id_color || 'transparent';
-                                    trackOwned = sch.track_owned || 'false';
-                                }
-                            });
-                            table += `<td style="background-color:${color};`;
-                            if (trackOwned === 'true') {
-                                table += `border-style:solid"> <span style="background-color:#00ff2f;">${track}</span> </td>`;
-                            } else {
-                                table += `border-style:dotted">${track}</td>`;
-                            }
-                        });
-
-                        table += '</tr>';
-                    });
-
-                    table += '</tbody></table>';
-                    document.getElementById('table-container').innerHTML = table;
-                    makeTableSortable();
-                })
-                .finally(() => {
-                    document.getElementById("loading").style.display = "none";
-                });
-        }
-
-    </script>
-</body>
-</html>
+<script src="{{ url_for('static', filename='js/series_all_dates.js') }}"></script>
+{% endblock %}
