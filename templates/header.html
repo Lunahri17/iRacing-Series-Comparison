@@ -1,49 +1,13 @@
-<link rel="stylesheet"
-      href="{{ url_for('static', filename='css/main.css') }}">
-
-<style>
-  .header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #333;
-    padding: 10px;
-    gap: 15px;
-    flex-wrap: wrap;
-  }
-
-  .header a,
-  .header button {
-    text-decoration: none;
-    padding: 10px 15px;
-    background-color: #444;
-    color: white;
-    border-radius: 6px;
-    font-weight: bold;
-    transition: 0.3s;
-    border: none;
-    cursor: pointer;
-  }
-
-  .header a:hover,
-  .header button:hover {
-    background-color: #666;
-  }
-</style>
-
 <div class="header">
-  <a href="https://lunahri.net.ar">🥵 Lunahri</a>
-
-  {% if is_logged_in %}
-    <a href="/profile">😎 Perfil iRacing</a>
-    <a href="/series">📊 iRacing Series</a>
-    <a href="/all_dates">📅 Todas las Fechas</a>
-    <a href="/cars">🚗 Autos</a>
-
-    <form action="{{ url_for('logout') }}" method="post" style="margin:0;">
-      <button type="submit">🚪 Logout</button>
-    </form>
-  {% else %}
+    <a href="https://lunahri.net.ar">🥵 Lunahri</a>
+    {% if is_logged_in %}
+      <a href="/profile">😎 Perfil iRacing</a>
+      <a href="/series">📊 Series</a>
+      <a href="/cars">🚗 Tus Autos</a>
+      <form action="/logout" method="post" style="margin:0;">
+            <button type="submit">🚪 Logout</button>
+      </form>
+    {% else %}
     <a href="/login">🔑 Login</a>
-  {% endif %}
+    {% endif %}
 </div>

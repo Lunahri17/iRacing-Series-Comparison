@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Luani Race Scheduler{% endblock %}</title>
+
+    <link rel="icon"
+          href="{{ url_for('static', filename='images/favicon.ico') }}">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+
+    {% include "header.html" %}
+
+    <div class="page-container">
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+</html>

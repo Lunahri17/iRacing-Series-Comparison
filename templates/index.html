@@ -1,95 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login iRacing</title>
+{% extends "base.html" %}
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background-color: #ddd;
-            color: #000;
-        }
+{% block title %}Login iRacing{% endblock %}
 
-        .login-container {
-            min-height: 10vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 40px 20px;
-        }
-
-        .login-container h1 {
-            font-size: 36px;
-            margin-bottom: 20px;
-        }
-
-        .login-container p {
-            max-width: 700px;
-            font-size: 18px;
-            color: #ccc;
-            margin-bottom: 40px;
-            line-height: 1.4;
-        }
-
-        .login-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            background-color: #1e88e5;
-            color: white;
-            padding: 16px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 6px;
-            text-decoration: none;
-            transition: background-color 0.3s;
-        }
-
-        .login-button:hover {
-            background-color: #1565c0;
-        }
-
-        .login-button img {
-            height: 22px;
-        }
-
-        .login-info {
-            margin-top: 15px;
-            font-size: 13px;
-            color: #242424;
-        }
-
-        .login-info a {
-            color: #4ea3ff;
-            text-decoration: none;
-        }
-
-        .login-info a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-
-{% include "header.html" %}
-
+{% block content %}
 <div class="login-container">
     <h1>Luani Race Scheduler</h1>
 
-    <a href="/login" class="login-button">
+    <a href="/login" class="btn-primary">
         CONTINUE WITH
-        <img src="{{ url_for('static', filename='images/iracing-logo-white.svg') }}"
-             alt="iRacing">
+        <img src="{{ url_for('static', filename='images/iracing-logo-white.svg') }}">
     </a>
 
     <div class="login-info">
         Serás redireccionado a iRacing para que ingreses tus credenciales.
     </div>
 </div>
-
-</body>
-</html>
+{% endblock %}

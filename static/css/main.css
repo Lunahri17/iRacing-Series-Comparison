@@ -1,40 +1,141 @@
-/* =========================
-   Botón principal estilo iRacing
-   ========================= */
+/* Base */
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #ddd;
+    color: #000;
+}
 
-.btn-primary {
-    display: inline-flex;
-    align-items: center;
+.page-container {
+    padding: 20px 10px;
+    text-align: center;
+}
+
+/* Header */
+.header {
+    display: flex;
     justify-content: center;
-    gap: 12px;
+    align-items: center;
+    background-color: #333;
+    padding: 10px;
+    gap: 15px;
+    flex-wrap: wrap;
+}
 
-    background-color: #1e88e5;
-    color: #ffffff;
-
-    padding: 14px 28px;
-    font-size: 15px;
-    font-weight: bold;
-    text-transform: uppercase;
-
+.header a,
+.header button {
+    text-decoration: none;
+    padding: 10px 15px;
+    background-color: #444;
+    color: white;
     border-radius: 6px;
+    font-weight: bold;
     border: none;
     cursor: pointer;
+    transition: 0.3s;
+}
 
+.header a:hover,
+.header button:hover {
+    background-color: #666;
+}
+
+/* Botón principal */
+.btn-primary {
+    background-color: #0084db;
+    color: white;
+    padding: 14px 22px;
+    border-radius: 10px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     text-decoration: none;
-    transition: background-color 0.25s ease, transform 0.1s ease;
+    margin: 20px auto;
 }
 
 .btn-primary:hover {
     background-color: #1565c0;
-    transform: translateY(-1px);
 }
 
-.btn-primary:active {
-    transform: translateY(0);
+.btn-primary img {
+    height: 18px;
 }
 
-/* Iconos dentro del botón */
-.btn-primary img,
-.btn-primary svg {
-    height: 20px;
+/* Login */
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+}
+
+.login-info {
+    font-size: 13px;
+    color: #242424;
+}
+
+/* Tablas */
+.table-wrapper {
+    width: 95%;
+    margin: 20px auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 6px;
+    text-align: center;
+}
+
+th {
+    background-color: #ccc;
+}
+
+/* Perfil */
+.profile-card {
+    display: inline-block;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    text-align: left;
+}
+
+/* Otros */
+.series-selector {
+    width: 1000px;
+    margin: 10px auto;
+    text-align: left;
+    font-size: 20px;
+    padding: 5px;
+}
+
+.search-box {
+    width: 100%;
+    padding: 6px;
+    margin-bottom: 8px;
+}
+
+.loading {
+    margin: 20px auto;
+}
+
+.options-bar {
+    margin: 15px 0;
+    text-align: center;
+}
+
+.checkbox-label {
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.checkbox-label input {
+    margin-right: 6px;
 }
