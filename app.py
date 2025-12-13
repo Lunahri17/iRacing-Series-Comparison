@@ -1,10 +1,12 @@
 import os
+import time
 import base64
 import hashlib
 import requests
 from dotenv import load_dotenv
 from functools import wraps
 from flask import Flask, redirect, request, session, url_for, render_template, jsonify
+
 import iracing_data_transform
 
 load_dotenv()
@@ -20,24 +22,20 @@ AUTH_URL = "https://oauth.iracing.com/oauth2/authorize"
 TOKEN_URL = "https://oauth.iracing.com/oauth2/token"
 PROFILE_URL = "https://oauth.iracing.com/oauth2/iracing/profile"
 
-
+# region Decoradores
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        token = session.get("access_token")
-        if not token:
+        if "access_token" not in session:
             return redirect(url_for("login"))
 
-        # Validar token llamando a /profile
-        headers = {"Authorization": f"Bearer {token}"}
-        resp = requests.get(PROFILE_URL, headers=headers)
-
-        if resp.status_code == 401:
-            session.clear()
-            return redirect(url_for("login"))
+        if is_token_expired():
+            if not refresh_access_token():
+                return redirect(url_for("login"))
 
         return f(*args, **kwargs)
     return decorated_function
+# endregion Decoradores
 
 # region Renders
 @app.route("/")
@@ -47,33 +45,21 @@ def index():
 @app.route('/dev')
 @login_required
 def dev():
-    token = session.get("access_token")
-    if not token:
-        return redirect(url_for("index"))
     return render_template('series_table_dev.html')
 
 @app.route('/series')
 @login_required
 def series():
-    token = session.get("access_token")
-    if not token:
-        return redirect(url_for("index"))
     return render_template('series_table.html')
 
 @app.route('/all_dates')
 @login_required
 def series_all_dates():
-    token = session.get("access_token")
-    if not token:
-        return redirect(url_for("index"))
     return render_template('series_table_all_dates.html')
 
 @app.route('/cars')
 @login_required
 def all_cars():
-    token = session.get("access_token")
-    if not token:
-        return redirect(url_for("index"))
     return render_template('cars_table.html')
 # endregion renders
 
@@ -82,9 +68,6 @@ def all_cars():
 @login_required
 def profile():
     token = session.get("access_token")
-    if not token:
-        return redirect(url_for("index"))
-
     headers = {
         "Authorization": f"Bearer {token}"
     }
@@ -104,9 +87,6 @@ def profile():
 @login_required
 def get_series_list():
     token = session.get("access_token")
-    if not token:
-        return redirect(url_for("index"))
-
     series_filtered = iracing_data_transform.get_dict_of_all_series(token)
     series_name = iracing_data_transform.get_onlys_series_name(token, series_filtered)
     return jsonify(series_name)
@@ -116,15 +96,9 @@ def get_series_list():
 @login_required
 def get_series_table():
     token = session.get("access_token")
-    if not token:
-        return redirect(url_for("index"))
-
     series_filtered = iracing_data_transform.get_dict_of_all_series(token)
-
     series = iracing_data_transform.get_relevant_data(token, series_filtered)
-
     all_dates = sorted({sch["start_date_week"] for serie in series for sch in serie["schedules"]})
-
     return jsonify({"series": series, "all_dates": all_dates})
 
 
@@ -132,13 +106,10 @@ def get_series_table():
 @login_required
 def get_all_cars():
     token = session.get("access_token")
-    if not token:
-        return redirect(url_for("index"))
     try:
         cars = iracing_data_transform.get_all_licenced_cars(token)
     except requests.HTTPError as ex:
-        return jsonify({"error": str(ex)}), 401
-
+        return jsonify({"error": str(ex)}), 400
     return jsonify({"cars": cars})
 # endregion APIs
 
@@ -197,8 +168,61 @@ def callback():
 
     token_json = token_response.json()
     session["access_token"] = token_json["access_token"]
+    session["refresh_token"] = token_json["refresh_token"]
+    session["token_expires_at"] = int(time.time()) + token_json["expires_in"]
 
     return redirect(url_for("profile"))
+
+@app.route("/logout", methods=['POST'])
+def logout():
+    session.clear()
+    return redirect(url_for("index"))
+
+@app.context_processor
+def inject_auth():
+    return {
+        "is_logged_in": "access_token" in session
+    }
+
+def is_token_expired():
+    expires_at = session.get("token_expires_at")
+    if not expires_at:
+        return True
+
+    # margen de seguridad de 60s
+    return time.time() > (expires_at - 60)
+
+def refresh_access_token():
+    refresh_token = session.get("refresh_token")
+    if not refresh_token:
+        return False
+
+    masked_secret = _mask_secret(CLIENT_SECRET, CLIENT_ID)
+
+    data = {
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token,
+        "client_id": CLIENT_ID,
+        "client_secret": masked_secret,
+    }
+
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+
+    resp = requests.post(TOKEN_URL, data=data, headers=headers, timeout=60)
+
+    if resp.status_code != 200:
+        session.clear()
+        return False
+
+    token_json = resp.json()
+
+    session["access_token"] = token_json["access_token"]
+    session["refresh_token"] = token_json.get("refresh_token", refresh_token)
+    session["token_expires_at"] = int(time.time()) + token_json["expires_in"]
+
+    return True
 # endregion Login
 
 # region Funciones auxiliares

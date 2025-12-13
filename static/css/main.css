@@ -1,0 +1,40 @@
+/* =========================
+   Botón principal estilo iRacing
+   ========================= */
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+
+    background-color: #1e88e5;
+    color: #ffffff;
+
+    padding: 14px 28px;
+    font-size: 15px;
+    font-weight: bold;
+    text-transform: uppercase;
+
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+
+    text-decoration: none;
+    transition: background-color 0.25s ease, transform 0.1s ease;
+}
+
+.btn-primary:hover {
+    background-color: #1565c0;
+    transform: translateY(-1px);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* Iconos dentro del botón */
+.btn-primary img,
+.btn-primary svg {
+    height: 20px;
+}
